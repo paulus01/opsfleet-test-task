@@ -1,0 +1,21 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: arm64-pool
+spec:
+  template:
+    metadata:
+      labels:
+        type: arm64
+    spec:
+      nodeClassRef:
+        name: arm64-class
+        kind: EC2NodeClass
+        group: karpenter.k8s.aws
+      requirements:
+        - key: "kubernetes.io/arch"
+          operator: In
+          values: ["arm64"]
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 5m

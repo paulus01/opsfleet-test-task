@@ -1,0 +1,15 @@
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: amd64
+spec:
+  requirements:
+    - key: "kubernetes.io/arch"
+      operator: In
+      values: ["amd64"]
+  provider:
+    subnetSelector:
+      karpenter.sh/discovery: karpenter-cluster
+    securityGroupSelector:
+      karpenter.sh/discovery: karpenter-cluster
+  ttlSecondsAfterEmpty: 30
