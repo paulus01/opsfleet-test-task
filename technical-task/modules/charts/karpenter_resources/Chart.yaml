@@ -1,0 +1,5 @@
+apiVersion: v2
+name: karpenter-resources
+version: 1.0.0
+description: Custom chart for Karpenter related Kubernetes resources
+type: application
