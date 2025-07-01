@@ -14,15 +14,13 @@ module "karpenter" {
 }
 
 resource "helm_release" "karpenter" {
-  name                = "karpenter"
-  namespace           = local.namespace
-  create_namespace    = true
-  repository          = "oci://public.ecr.aws/karpenter"
-  repository_username = data.aws_ecrpublic_authorization_token.token.user_name
-  repository_password = data.aws_ecrpublic_authorization_token.token.password
-  chart               = "karpenter"
-  version             = "1.0.2"
-  wait                = false
+  name             = "karpenter"
+  namespace        = local.namespace
+  create_namespace = true
+  repository       = "oci://public.ecr.aws/karpenter"
+  chart = "karpenter"
+  version = "1.5.0"
+  wait    = false
 
   values = [
     <<-EOT
@@ -52,14 +50,14 @@ resource "helm_release" "karpenter" {
 }
 
 resource "helm_release" "karpenter_resources" {
-  name       = "karpenter-resources"
-#   namespace  = "default"
-  chart      = "./charts/karpenter_resources"         # Path to your custom chart
-#   version    = "1.0.0"                     # Optional if local
+  name = "karpenter-resources"
+  chart            = "./charts/karpenter_resources" # Path to your custom chart
+  version          = "1.0.0"                        # Optional if local
   create_namespace = true
 
-values = [yamlencode({
+  values = [yamlencode({
     cluster = var.name
   })]
 
+  depends_on = [helm_release.karpenter]
 }

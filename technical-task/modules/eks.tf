@@ -6,10 +6,6 @@ data "aws_availability_zones" "available" {
   }
 }
 
-data "aws_ecrpublic_authorization_token" "token" {
-  provider = aws.virginia
-}
-
 locals {
 
   name   = var.name
@@ -35,7 +31,7 @@ module "eks" {
   version = "~> 20.24"
 
   cluster_name    = local.name
-  cluster_version = "1.30"
+  cluster_version = "1.33"
 
   # Gives Terraform identity admin access to cluster which will
   # allow deploying resources (Karpenter) into the cluster
@@ -81,9 +77,7 @@ module "eks" {
         "karpenter.sh/controller" = "true"
       }
 
-      tags = {
-        "karpenter.sh/discovery" = var.name
-      }
+      tags = local.tags
     }
   }
 
@@ -101,21 +95,6 @@ output "configure_kubectl" {
   description = "Configure kubectl: make sure you're logged in with the correct AWS profile and run the following command to update your kubeconfig"
   value       = "aws eks --region ${local.region} update-kubeconfig --name ${module.eks.cluster_name}"
 }
-
-# module "karpenter" {
-#   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-#   version = "~> 20.24"
-
-#   cluster_name          = module.eks.cluster_name
-#   enable_v1_permissions = true
-#   namespace             = local.namespace
-
-#   node_iam_role_use_name_prefix   = false
-#   node_iam_role_name              = local.name
-#   create_pod_identity_association = true
-
-#   tags = local.tags
-# }
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -144,41 +123,3 @@ module "vpc" {
 
   tags = local.tags
 }
-
-# resource "helm_release" "karpenter" {
-#   name                = "karpenter"
-#   namespace           = local.namespace
-#   create_namespace    = true
-#   repository          = "oci://public.ecr.aws/karpenter"
-#   repository_username = data.aws_ecrpublic_authorization_token.token.user_name
-#   repository_password = data.aws_ecrpublic_authorization_token.token.password
-#   chart               = "karpenter"
-#   version             = "1.0.2"
-#   wait                = false
-
-#   values = [
-#     <<-EOT
-#     nodeSelector:
-#       karpenter.sh/controller: 'true'
-#     settings:
-#       clusterName: ${module.eks.cluster_name}
-#       clusterEndpoint: ${module.eks.cluster_endpoint}
-#       interruptionQueue: ${module.karpenter.queue_name}
-#     tolerations:
-#       - key: CriticalAddonsOnly
-#         operator: Exists
-#       - key: karpenter.sh/controller
-#         operator: Exists
-#         effect: NoSchedule
-#     webhook:
-#       enabled: false
-#     EOT
-#   ]
-
-#   lifecycle {
-#     ignore_changes = [
-#       repository_password
-#     ]
-#   }
-
-# }
